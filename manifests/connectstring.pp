@@ -10,6 +10,7 @@ define oracleclient::connectstring(
                                     $connect_timeout           = '5',
                                     $transport_connect_timeout = '3',
                                     $retry_count               = '3',
+                                    $instance_name             = undef,
                                   ) {
 
   # example
@@ -23,6 +24,15 @@ define oracleclient::connectstring(
   #   )
   # )
 
+  # PROD1=
+  # (DESCRIPTION=
+  #   (ADDRESS=(PROTOCOL=tcp)(HOST=systemadmindb01-vip.systemadmin.es)(PORT=1521))
+  #   (CONNECT_DATA=
+  #       (SERVICE_NAME=PROD)
+  #       (INSTANCE_NAME=PROD1)
+  #   )
+  # )
+
   if($csalias)
   {
     validate_array($csalias)
@@ -33,5 +43,4 @@ define oracleclient::connectstring(
     order   => '00',
     content => template("${module_name}/tnsnames.erb"),
   }
-
 }
