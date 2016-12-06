@@ -1,19 +1,20 @@
 class oracleclient  (
-                      $package             = undef,
-                      $localfile           = undef,
-                      $exactversion        = '12.1.0.1.0',
-                      $oracleuser          = 'oracle',
-                      $oraclegroup         = 'dba',
-                      $oracleinstallgroup  = 'oinstall',
-                      $oraclehome          = '/u01/app/product/12/client',
-                      $oraclebase          = '/u01/app',
-                      $orainventory        = '/u01/app/oraInventory',
-                      $srcdir              = '/u01/software',
-                      $languages           = [ 'en' ],
-                      $createusers         = true,
-                      $addtopath           = false,
-                      $software_to_install = [ 'oracle.rdbms.util', 'oracle.javavm.client', 'oracle.sqlplus',
-                                              'oracle.dbjava.jdbc', 'oracle.network.client', 'oracle.odbc' ],
+                      $package                = undef,
+                      $localfile              = undef,
+                      $exactversion           = '12.1.0.1.0',
+                      $oracleuser             = 'oracle',
+                      $oraclegroup            = 'dba',
+                      $oracleinstallgroup     = 'oinstall',
+                      $oraclehome             = '/u01/app/product/12/client',
+                      $oraclebase             = '/u01/app',
+                      $orainventory           = '/u01/app/oraInventory',
+                      $srcdir                 = '/u01/software',
+                      $languages              = [ 'en' ],
+                      $createusers            = true,
+                      $addtopath              = false,
+                      $debug_eyp_runinstaller = false,
+                      $software_to_install    = [ 'oracle.rdbms.util', 'oracle.javavm.client', 'oracle.sqlplus',
+                                                  'oracle.dbjava.jdbc', 'oracle.network.client', 'oracle.odbc' ],
                     )inherits params {
 
   validate_array($languages)
@@ -206,18 +207,37 @@ class oracleclient  (
     default: { fail("Unsupported installer for Oracle ${majorversion}!")  }
   }
 
-  exec { "runinstaller client ${version}":
-    command     => $installer_command,
-    timeout     => 0,
-    require     => [ Exec["unzip ${srcdir}/oracleclient-${version}.zip"],
+  file { "${srcdir}/client/.eyp-runInstalled.sh":
+    ensure  => 'present',
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0755',
+    content => template("${module_name}/customruninstaller.erb"),
+    require => [ Exec["unzip ${srcdir}/oracleclient-${version}.zip"],
                   File[ [ $oraclehome, $oraclebase, $orainventory, $srcdir, "${oraclehome}/responsefile.rsp" ] ]
-                  ],
+                ],
+  }
+
+  exec { "runinstaller client ${version}":
+    command     => "/bin/bash -x ${srcdir}/client/.eyp-runInstalled.sh",
+    timeout     => 0,
+    require     => File["${srcdir}/client/.eyp-runInstalled.sh"],
     refreshonly => true,
-    notify      => Exec["runinstaller client ${version} rootsh"],
+    notify      => Exec[ [ "runinstaller client ${version} rootsh", "orainstRoot.sh ${orainventory}" ] ],
   }
 
   exec { "runinstaller client ${version} rootsh":
     command     => "${oraclehome}/root.sh > ${oraclehome}/.rootsh.log 2>&1",
+    onlyif      => "test -f ${oraclehome}/root.sh",
+    timeout     => 0,
+    require     => Exec["runinstaller client ${version}"],
+    refreshonly => true,
+  }
+
+  #/u01/app/oraInventory/orainstRoot.sh
+  exec { "orainstRoot.sh ${orainventory}":
+    command     => "${orainventory}/orainstRoot.sh > ${oraclehome}/.orainstRoot.log 2>&1",
+    onlyif      => "test -f ${orainventory}/orainstRoot.sh",
     timeout     => 0,
     require     => Exec["runinstaller client ${version}"],
     refreshonly => true,

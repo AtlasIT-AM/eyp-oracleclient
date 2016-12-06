@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 0.2.17
+
+* added ${srcdir}/client/.eyp-runInstalled.sh to remount /tmp with exec
+
+## 0.2.16
+
+* added onlyif for  exec "runinstaller client ${version} rootsh" (**${oraclehome}/root.sh**)
+
+## 0.2.15
+
+* added execution of /u01/app/oraInventory/orainstRoot.sh
+
 ## 0.2.14
 
 * updated dependencies
