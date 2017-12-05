@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 0.2.28
+
+* bugfix identation
+
+## 0.2.26
+
+* added more options to **oracleclient::connectstring**:
+  - community
+  - sid
+  - global_name
+* dbname (**SERVICE_NAME**) is no longer mandatory in **oracleclient::connectstring**
+
 ## 0.2.25
 
 * bugfix: honor **oracleclient::instantclient::ver**
